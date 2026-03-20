@@ -751,8 +751,9 @@ const COND_AC_EFFECTS = {
 function computeEffectiveAC(c, autoFlatFooted) {
   const baseAC = c.ac + c.acMod;
   const baseTouch = (c.touchAC || 0) + c.acMod;
-  const baseFF = (c.ffAC || 0) + c.acMod;
-  const dexDodge = c.ac - (c.ffAC || c.ac); // what FF strips away
+  const hasFF = c.ffAC > 0;
+  const baseFF = hasFF ? c.ffAC + c.acMod : baseAC; // fallback to full AC if no FF data
+  const dexDodge = hasFF ? c.ac - c.ffAC : 0; // can't compute without FF data
 
   let loseDex = autoFlatFooted;
   let totalPenalty = 0;
@@ -1559,7 +1560,7 @@ function render() {
           <span class="char-type-badge">${c.type.toUpperCase()}</span>
         </div>
         <div class="stat-block">
-          <div class="stat-label">AC${effAC.loseDex ? ' (FF)' : ''}</div>
+          <div class="stat-label">AC${effAC.loseDex && c.ffAC > 0 ? ' (FF)' : ''}</div>
           <div class="stat-value ${acColorClass}">${acDisplay}</div>
           ${acOriginal}
           ${acModStr}
