@@ -230,10 +230,10 @@ svg.route{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;o
 svg.route .roadhalo{fill:none;stroke:#fdf3dc;stroke-width:9;stroke-linecap:round;opacity:.55}
 svg.route .road{fill:none;stroke:#5f1a0e;stroke-width:4.4;stroke-dasharray:11 8;stroke-linecap:round}
 svg.route .dot{fill:#5f1a0e;stroke:#fdf3dc;stroke-width:2.2;opacity:0;transform:scale(.4);transform-box:fill-box;transform-origin:center;
-  transition:opacity .45s ease, transform .45s cubic-bezier(.3,1.4,.5,1)}
-svg.route .halo{fill:none;stroke:#5f1a0e;stroke-width:2.2;opacity:0;transition:opacity .6s ease .2s}
+  transition:opacity .8s ease, transform .8s cubic-bezier(.3,1.4,.5,1)}
+svg.route .halo{fill:none;stroke:#5f1a0e;stroke-width:2.2;opacity:0;transition:opacity 1s ease .3s}
 svg.route .num{font-family:var(--fellsc);font-size:22px;fill:#4a1109;stroke:#fdf3dc;stroke-width:3.4;paint-order:stroke;
-  text-anchor:middle;opacity:0;transition:opacity .5s ease .15s}
+  text-anchor:middle;opacity:0;transition:opacity .9s ease .25s}
 svg.route .mk.on .dot{opacity:1;transform:scale(1)}
 svg.route .mk.on .halo{opacity:.55}
 svg.route .mk.on .num{opacity:.95}
@@ -291,7 +291,9 @@ svg.emb.solo{width:calc(var(--ph) * .16);height:calc(var(--ph) * .16);margin:.35
 
 /* Cordon */
 .rules .rulebody p{text-align:left;font-size:.95em;margin:0 0 .5em}
-.rules .tally{margin-top:.6em;font-family:var(--fellsc);font-size:.9em;color:var(--ink-faded);text-align:center}
+.begin{display:flex;justify-content:center;gap:1.4em;min-height:1.3em}
+.begin button{all:unset;cursor:pointer;font-style:italic;color:var(--rubric);font-size:1em;border-bottom:1px dotted rgba(142,42,26,.5)}
+.begin button:hover{color:#b3341f;border-bottom-style:solid}
 .rules .newgame{all:unset;display:block;margin:.5em auto 0;cursor:pointer;font-style:italic;color:var(--rubric);font-size:.95em}
 .rules .newgame:hover{text-decoration:underline}
 .board-page{display:flex;align-items:center;justify-content:center}
@@ -446,7 +448,7 @@ body.single #phead::after{left:calc(var(--pw) * .07);right:calc(var(--pw) * .07)
 
 .emb.embimg{display:block;width:calc(var(--ph) * .3);height:calc(var(--ph) * .26);margin-top:.7em;
   background:var(--rubric);-webkit-mask:var(--src) center/contain no-repeat;mask:var(--src) center/contain no-repeat;
-  clip-path:inset(0 0 101% 0);transition:clip-path .9s cubic-bezier(.4,.05,.3,1)}
+  clip-path:inset(0 0 101% 0);transition:clip-path 1.8s cubic-bezier(.4,.05,.3,1)}
 .emb.embimg.on{clip-path:inset(0 0 -2% 0)}
 .emb.embimg.solo{width:calc(var(--ph) * .16);height:calc(var(--ph) * .16);margin:.35em auto 0}
 
@@ -457,9 +459,9 @@ body.single #phead::after{left:calc(var(--pw) * .07);right:calc(var(--pw) * .07)
 .scroller p.ans .ans-text{font-family:var(--fellsc);letter-spacing:.06em;color:var(--ink)}
 
 /* ink */
-.wipe{clip-path:inset(0 101% 0 -2%);transition:clip-path .34s cubic-bezier(.32,.72,.3,1)}
+.wipe{clip-path:inset(0 101% 0 -2%);transition:clip-path .85s cubic-bezier(.32,.72,.3,1)}
 .wipe.on{clip-path:inset(0 -2% 0 -2%)}
-.settle{opacity:.16;filter:blur(1.8px);transition:opacity .42s ease, filter .54s ease}
+.settle{opacity:.16;filter:blur(1.8px);transition:opacity 1.05s ease, filter 1.35s ease}
 .settle.on{opacity:1;filter:none}
 
 /* page turn affordances */
@@ -709,17 +711,17 @@ function pageHtml(i){
     '<header class="ch"><h2>Cordon</h2>'+ornament()+'</header>'+
     '<p class="lead">A game older than the borders, scratched into tables from Vhorast to Fjornhalt.</p>'+
     '<div class="rulebody">'+
-    '<p>Eight of the cordon stand at the edges. Four of the hold stand with their lord at the centre.</p>'+
+    '<p>Eight of the cordon, the crossed swords, stand at the edges. Four of the hold, the shields, stand with their lord, the crown, at the centre.</p>'+
     '<p>Every piece moves like a cart on a rut: any distance along a rank or a file, never through another piece. Only the lord may stand upon the centre or in a corner.</p>'+
     '<p>A piece is taken when the enemy closes on both sides of it along a rank or file. The corners and the empty centre count as an enemy for this. Move between two enemies freely; it is the closing that kills.</p>'+
     '<p>The lord wins by reaching any corner. The cordon wins by closing on the lord from all four sides.</p>'+
-    '<p class="q">The cordon moves first. You have the hold.</p></div>'+
-    '<div class="levels"><span>The cordon keeps a</span>'+
+    '<p class="q">The cordon moves first. Choose your side on the board.</p></div>'+
+    '<div class="levels"><span>The other side keeps a</span>'+
     ['slack','fair','tight'].map(function(k){return '<button class="lvl" data-lvl="'+k+'">'+k+'</button>';}).join('')+
     '<span>watch</span></div>'+
-    '<div class="tally"></div><button class="newgame">Begin again</button>'+
+    '<button class="newgame">New game</button>'+
     '<button class="toboard">Turn the page to play ›</button>'+folio+'</div>';
-  if(p.kind==='gameR')return (folio='')||'<div class="pc sp board-page"><div class="boardwrap"><div class="board"></div><div class="gstatus"></div><div class="taken"></div></div>'+folio+'</div>';
+  if(p.kind==='gameR')return (folio='')||'<div class="pc sp board-page"><div class="boardwrap"><div class="board"></div><div class="gstatus"></div><div class="begin"></div><div class="taken"></div></div>'+folio+'</div>';
   if(p.kind==='merged')return '<div class="pc sp merged"><div class="mhead">'+titleHtml(p,i)+'</div>'+
     '<div class="scroller" tabindex="0">'+(p._arr||(p._arr=arrange(resolveImgs(p.sec.html))))+'</div>'+folio+'</div>';
   if(p.kind==='plateFull'){
@@ -779,7 +781,7 @@ function inkSwash(el){
   if(seen[key]||reduce){p.style.strokeDashoffset=0;return;}
   seen[key]=1;var len=p.getTotalLength();
   p.style.strokeDasharray=len;p.style.strokeDashoffset=len;
-  setTimeout(function(){p.style.transition='stroke-dashoffset 900ms cubic-bezier(.4,.05,.3,1)';p.style.strokeDashoffset='0';},420);
+  setTimeout(function(){p.style.transition='stroke-dashoffset 1800ms cubic-bezier(.4,.05,.3,1)';p.style.strokeDashoffset='0';},420);
 }
 function inkEmblem(el){
   var pic=el.querySelector('.embimg');
@@ -827,7 +829,7 @@ function inkRoute(el,again){
   if(again){rev.style.transition='none';marks.forEach(function(m){m.classList.remove('on');});void svg.getBoundingClientRect();}
   seen.map=1;
   rev.style.strokeDasharray=len;rev.style.strokeDashoffset=len;
-  var dur=2600;
+  var dur=5000;
   requestAnimationFrame(function(){
     rev.style.transition='stroke-dashoffset '+dur+'ms cubic-bezier(.45,.05,.35,1)';
     rev.style.strokeDashoffset='0';
@@ -872,7 +874,7 @@ function runInk(blocks,base){
   blocks.forEach(function(b){
     var wipe=b.classList.contains('wipe');
     setTimeout(function(){b.classList.add('on');},t);
-    t+=wipe?110:(b.tagName==='LI'?40:70);
+    t+=wipe?275:(b.tagName==='LI'?100:175);
   });
 }
 
@@ -1007,14 +1009,14 @@ var N=7,THRONE=24,CORNERS=[0,6,42,48];
 var LEVELS={slack:{d:0,w:6,slip:.55},fair:{d:2,w:14,slip:.12},tight:{d:4,w:18,slip:0}};
 var LEVEL='fair';
 try{var _l=localStorage.getItem('gf-cordon-level');if(_l&&LEVELS[_l])LEVEL=_l;}catch(e){}
-var G=null;
+var G=null,PLAYER=2;   /* PLAYER: 1 plays the cordon (swords), 2 the hold (shields) */
 function idx(r,c){return r*N+c;}
 function startPos(){
   var b=new Array(49).fill(0); /* 0 empty, 1 cordon, 2 hold, 3 lord */
   [3,10,21,22,26,27,38,45].forEach(function(i){b[i]=1;});
   [17,23,25,31].forEach(function(i){b[i]=2;});
   b[24]=3;
-  return {b:b,turn:1,over:null,sel:-1,moves:[],last:null,taken:{1:0,2:0}};
+  return {b:b,turn:1,over:null,sel:-1,moves:[],last:null,taken:{1:0,2:0},idle:true};
 }
 function special(i){return i===THRONE||CORNERS.indexOf(i)>=0;}
 function isFoe(p,side){return p&&(side===1?(p===2||p===3):p===1);}
@@ -1110,7 +1112,9 @@ function evaluate(st){
   s-=lordFreeRun(st)*70;
   return s;
 }
+var DEADLINE=0,THINK=1400;   /* the computer thinks at most THINK ms a move */
 function search(st,depth,alpha,beta){
+  if(DEADLINE&&Date.now()>DEADLINE)throw 'time';
   if(st.over||depth===0)return evaluate(st);
   var side=st.turn,moves=allMoves(st,side);
   if(!moves.length)return evaluate(st);
@@ -1125,23 +1129,31 @@ function search(st,depth,alpha,beta){
   }
   return best;
 }
-function cordonMove(st){
-  var cfg=LEVELS[LEVEL]||LEVELS.fair,moves=allMoves(st,1);
+function aiMove(st,side){
+  /* the computer's move for either side; evaluate() favours the cordon, so the hold minimises it */
+  var cfg=LEVELS[LEVEL]||LEVELS.fair,moves=allMoves(st,side),sg=side===1?1:-1;
   if(!moves.length)return null;
   if(Math.random()<cfg.slip)return moves[Math.floor(Math.random()*moves.length)];
-  var ranked=moves.map(function(m){var s=apply(st,m);return [evaluate(s),m,s];})
+  var ranked=moves.map(function(m){var s=apply(st,m);return [sg*evaluate(s),m,s];})
                   .sort(function(a,b){return b[0]-a[0];}).slice(0,cfg.w);
   if(cfg.d===0){var top=ranked.slice(0,3);return top[Math.floor(Math.random()*top.length)][1];}
-  var best=null,bv=-1e9;
-  ranked.forEach(function(e){
-    var v=search(e[2],cfg.d,-1e9,1e9);
-    if(v>bv||(v===bv&&Math.random()<0.3)){bv=v;best=e[1];}
-  });
-  return best||moves[0];
+  /* look one move deeper at a time; keep the last depth that finished inside the time allowed */
+  var best=ranked[0][1];
+  DEADLINE=Date.now()+THINK;
+  try{
+    for(var d=1;d<=cfg.d;d++){
+      var pick=null,bv=-1e9;
+      ranked.forEach(function(e){
+        var v=sg*search(e[2],d,-1e9,1e9);
+        if(v>bv||(v===bv&&Math.random()<0.3)){bv=v;pick=e[1];}
+      });
+      best=pick||best;
+    }
+  }catch(x){if(x!=='time')throw x;}
+  DEADLINE=0;
+  return best;
 }
 /* ---- board rendering ---- */
-function tallyGet(){try{return JSON.parse(localStorage.getItem('gf-cordon')||'{"w":0,"l":0}');}catch(e){return {w:0,l:0};}}
-function tallySet(t){try{localStorage.setItem('gf-cordon',JSON.stringify(t));}catch(e){}}
 function drawBoard(el){
   var host=el.querySelector('.board'); if(!host)return;
   if(!G)G=startPos();
@@ -1157,29 +1169,30 @@ function drawBoard(el){
     sq.dataset.i=i;
     host.appendChild(sq);
   }
-  var st=el.querySelector('.gstatus'),tl=tallyGet();
-  var msg=G.over==='hold'?'The lord is away. The hold wins.':
+  var st=el.querySelector('.gstatus');
+  var msg=G.idle?'Choose your side.':
+          G.over==='hold'?'The lord is away. The hold wins.':
           G.over==='cordon'?'The cordon closes. The lord is taken.':
           G.over==='draw'?'Neither side gives. The game is set aside.':
-          (G.turn===2?'Your move.':'The cordon considers…');
+          (G.turn===PLAYER?'Your move.':(G.turn===1?'The cordon considers…':'The hold considers…'));
+  var bg=el.querySelector('.begin');
+  if(bg){
+    bg.innerHTML=(G.idle||G.over)?'<button data-side="2">Play the shields</button><button data-side="1">Play the swords</button>':'';
+    bg.querySelectorAll('button').forEach(function(b){b.onclick=function(){beginGame(el,+b.dataset.side);};});
+  }
   var tk=el.querySelector('.taken');
   if(tk)tk.textContent=(G.taken[1]||G.taken[2])?('Taken — hold '+G.taken[1]+' · cordon '+G.taken[2]):'';
   if(st)st.textContent=msg;
-  var tel=document.querySelector('.tally');
-  if(tel)tel.textContent='Hold '+tl.w+' · Cordon '+tl.l;
 }
-function endGame(el){
-  var t=tallyGet();
-  if(G.over==='draw')return;
-  if(G.over==='hold')t.w++;else t.l++;
-  tallySet(t);drawBoard(el);
+function beginGame(el,side){
+  PLAYER=side;G=startPos();G.idle=false;drawBoard(el);aiTurn(el);
 }
-function cordonTurn(el){
+function aiTurn(el){
+  var g=G;
   setTimeout(function(){
-    if(!G||G.over||G.turn!==1)return;
-    var mv=cordonMove(G); if(!mv)return;
+    if(!G||G!==g||G.idle||G.over||G.turn===PLAYER)return;
+    var mv=aiMove(G,G.turn); if(!mv)return;
     G=apply(G,mv);drawBoard(el);
-    if(G.over)endGame(el);
   },420);
 }
 function bindBoard(el){
@@ -1187,20 +1200,20 @@ function bindBoard(el){
   if(!G)G=startPos();
   drawBoard(el);
   host.onclick=function(e){
-    var sq=e.target.closest('.sq'); if(!sq||G.over||G.turn!==2)return;
+    var sq=e.target.closest('.sq'); if(!sq||G.idle||G.over||G.turn!==PLAYER)return;
     var i=+sq.dataset.i,p=G.b[i];
     if(G.sel>=0&&G.moves.indexOf(i)>=0){
       G=apply(G,[G.sel,i]);drawBoard(el);
-      if(G.over){endGame(el);return;}
-      cordonTurn(el);return;
+      if(!G.over)aiTurn(el);
+      return;
     }
-    if(p&&sideOf(p)===2){G.sel=i;G.moves=legalFrom(G,i);}
+    if(p&&sideOf(p)===PLAYER){G.sel=i;G.moves=legalFrom(G,i);}
     else{G.sel=-1;G.moves=[];}
     drawBoard(el);
   };
   var nb=document.querySelector('.newgame');
-  if(nb)nb.onclick=function(){G=startPos();drawBoard(el);cordonTurn(el);};
-  if(G.turn===1&&!G.over)cordonTurn(el);
+  if(nb)nb.onclick=function(){G=startPos();drawBoard(el);};
+  if(!G.idle&&!G.over&&G.turn!==PLAYER)aiTurn(el);
 }
 
 /* ---------- layout ---------- */
@@ -1610,8 +1623,8 @@ function bindPage(el){
     b.classList.toggle('on',b.dataset.lvl===LEVEL);
     b.onclick=function(){LEVEL=b.dataset.lvl;try{localStorage.setItem('gf-cordon-level',LEVEL);}catch(e){}
       el.querySelectorAll('.lvl').forEach(function(x){x.classList.toggle('on',x.dataset.lvl===LEVEL);});};});
-  if(el.querySelector('.tally')&&!el.querySelector('.board')){var t=tallyGet();el.querySelector('.tally').textContent='Hold '+t.w+' · Cordon '+t.l;
-    var nb=el.querySelector('.newgame');if(nb)nb.onclick=function(){G=startPos();var bp=document.querySelector('.board-page');if(bp){drawBoard(bp);cordonTurn(bp);}};}
+  if(el.querySelector('.newgame')&&!el.querySelector('.board')){
+    var nb=el.querySelector('.newgame');nb.onclick=function(){G=startPos();var bp=document.querySelector('.board-page');if(bp)drawBoard(bp);};}
   el.querySelectorAll('.scroller,.idx,.olist').forEach(function(sc){
     var upd=function(){sc.style.setProperty('--ft',sc.scrollTop>4?'24px':'0px');
       sc.style.setProperty('--fb',(sc.scrollTop+sc.clientHeight>=sc.scrollHeight-4)?'0px':'32px');};
