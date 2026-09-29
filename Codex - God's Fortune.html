@@ -63,6 +63,10 @@ body{font-family:var(--fell);color:var(--ink);-webkit-tap-highlight-color:transp
 #flipper .face{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;
   background:#e9dcc0 var(--parch) center/100% 100% no-repeat;overflow:hidden}
 #flipper .back{transform:rotateY(180deg)}
+/* The turning sheet is a still picture of the page: nothing inside it scrolls or animates. A scrolling area here
+   carries its whole content (11,000+ px on long pages) into the 3D turn, which exhausted memory on iPhones. */
+#flipper .scroller,#flipper .idx,#flipper .olist{overflow:hidden}
+#flipper .wipe,#flipper .settle,#flipper .embimg{transition:none}
 #flipper .face::after{content:'';position:absolute;inset:0;pointer-events:none;opacity:var(--shade,0);
   background:linear-gradient(90deg, rgba(20,10,3,.55), rgba(20,10,3,.15))}
 
@@ -449,7 +453,7 @@ body.single #phead::after{left:calc(var(--pw) * .07);right:calc(var(--pw) * .07)
 .scroller p.ans .ans-text{font-family:var(--fellsc);letter-spacing:.06em;color:var(--ink)}
 
 /* ink */
-.wipe{clip-path:inset(0 101% 0 -2%);will-change:clip-path;transition:clip-path .34s cubic-bezier(.32,.72,.3,1)}
+.wipe{clip-path:inset(0 101% 0 -2%);transition:clip-path .34s cubic-bezier(.32,.72,.3,1)}
 .wipe.on{clip-path:inset(0 -2% 0 -2%)}
 .settle{opacity:.16;filter:blur(1.8px);transition:opacity .42s ease, filter .54s ease}
 .settle.on{opacity:1;filter:none}
@@ -949,6 +953,7 @@ function ink(el){
   requestAnimationFrame(function(){runInk(blocks,60);});
 }
 function copyFace(face,src){
+  flipper.style.display='block'; /* a hidden sheet can't take a scroll position; show it (same task, no paint yet) first */
   face.innerHTML=src.innerHTML;
   face.querySelectorAll('.wipe,.settle').forEach(function(b){b.classList.add('on');});
   var a=src.querySelector('.scroller'),b=face.querySelector('.scroller'); if(a&&b)b.scrollTop=a.scrollTop;
@@ -1287,7 +1292,7 @@ function animateFlip(a,b,dur,cb,fade){
   }
   requestAnimationFrame(step);
 }
-function done(target,after){cur=target;busy=false;ink(pageL);ink(pageR);inkRoute(pageL);inkRoute(pageR);inkEmblem(pageL);inkEmblem(pageR);inkSwash(pageL);inkSwash(pageR);updateTurns();markRibbon();head();warmAround();if(after)after();}
+function done(target,after){fFront.innerHTML='';fBack.innerHTML='';cur=target;busy=false;ink(pageL);ink(pageR);inkRoute(pageL);inkRoute(pageR);inkEmblem(pageL);inkEmblem(pageR);inkSwash(pageL);inkSwash(pageR);updateTurns();markRibbon();head();warmAround();if(after)after();}
 function next(){turnTo(cur+1);}
 function prev(){turnTo(cur-1);}
 function goChapter(id){
