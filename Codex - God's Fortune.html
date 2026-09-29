@@ -300,14 +300,18 @@ svg.emb.solo{width:calc(var(--ph) * .16);height:calc(var(--ph) * .16);margin:.35
   border:2px solid rgba(70,45,20,.6);background:rgba(120,90,50,.06)}
 .sq{all:unset;position:relative;display:flex;align-items:center;justify-content:center;cursor:pointer;
   box-shadow:inset 0 0 0 1px rgba(90,62,30,.35)}
-.sq.corner::after,.sq.throne::after{content:'';position:absolute;width:34%;height:34%;border:1px solid rgba(120,42,26,.5);transform:rotate(45deg)}
+.sq.corner::after,.sq.throne::after{content:'';position:absolute;width:74%;height:74%;background:rgba(110,84,57,.42);
+  -webkit-mask:center/contain no-repeat;mask:center/contain no-repeat}
+.sq.throne::after{-webkit-mask-image:var(--cd-keep);mask-image:var(--cd-keep)}
+.sq.corner::after{-webkit-mask-image:var(--cd-road);mask-image:var(--cd-road)}
 .sq.can::before{content:'';position:absolute;width:22%;height:22%;border-radius:50%;background:rgba(142,42,26,.3)}
 .sq.sel{box-shadow:inset 0 0 0 2px rgba(142,42,26,.8)}
 .sq.last{background:rgba(190,150,80,.14)}
-.sq span{width:66%;height:66%;border-radius:50%;display:block}
-.sq .pc1{background:radial-gradient(circle at 34% 30%,#5b4632,#2a1c12 70%);box-shadow:0 1px 2px rgba(0,0,0,.5)}
-.sq .pc2{background:radial-gradient(circle at 34% 30%,#f2e6c8,#c8b189 70%);box-shadow:0 1px 2px rgba(0,0,0,.45)}
-.sq .pc3{background:radial-gradient(circle at 34% 30%,#f7ecce,#cbb07a 70%);box-shadow:0 1px 2px rgba(0,0,0,.45), inset 0 0 0 2px rgba(142,42,26,.75)}
+/* ink-drawn pieces: crossed swords (cordon) closing on shields (hold) guarding the crown (lord) */
+.sq span{position:relative;z-index:1;display:block;-webkit-mask:center/contain no-repeat;mask:center/contain no-repeat}
+.sq .pc1{width:84%;height:84%;background:var(--ink);-webkit-mask-image:var(--cd-sword);mask-image:var(--cd-sword)}
+.sq .pc2{width:80%;height:80%;background:var(--rubric);-webkit-mask-image:var(--cd-shield);mask-image:var(--cd-shield)}
+.sq .pc3{width:86%;height:86%;background:var(--rubric);-webkit-mask-image:var(--cd-crown);mask-image:var(--cd-crown)}
 .taken{font-family:var(--fellsc);font-size:.82em;color:var(--ink-faded);text-align:center;min-height:1em}
 .gstatus{font-style:italic;color:var(--ink-faded);font-size:.95em;text-align:center;min-height:1.3em}
 
@@ -757,8 +761,9 @@ var EMBLEM={
       'M50 40 C60 28 76 25 88 27 V64 C76 62 60 65 50 76',
       'M50 40 V76']
 };
-var EMBIMG={"ulrathos": "Codex%20Media/3.%20Codex/Codex%20Icons/Codex%20Icon%20-%20Ulrathos.png", "divine": "Codex%20Media/3.%20Codex/Codex%20Icons/Codex%20Icon%20-%20Divine.png", "codex": "Codex%20Media/3.%20Codex/Codex%20Icons/Codex%20Icon%20-%20Codex.png", "threads": "Codex%20Media/3.%20Codex/Codex%20Icons/Codex%20Icon%20-%20Loose%20Threads.png", "riddles": "Codex%20Media/3.%20Codex/Codex%20Icons/Codex%20Icon%20-%20Riddles.png", "petto": "Codex%20Media/3.%20Codex/Codex%20Icons/Codex%20Icon%20-%20Petto.png", "log": "Codex%20Media/3.%20Codex/Codex%20Icons/Codex%20Icon%20-%20Session%20Log.png", "frame": "Codex%20Media/3.%20Codex/Codex%20Icons/Codex%20Icon%20-%20Frame.png"};
+var EMBIMG={"ulrathos": "Codex%20Media/3.%20Codex/Codex%20Icons/Codex%20Icon%20-%20Ulrathos.png", "divine": "Codex%20Media/3.%20Codex/Codex%20Icons/Codex%20Icon%20-%20Divine.png", "codex": "Codex%20Media/3.%20Codex/Codex%20Icons/Codex%20Icon%20-%20Codex.png", "threads": "Codex%20Media/3.%20Codex/Codex%20Icons/Codex%20Icon%20-%20Loose%20Threads.png", "riddles": "Codex%20Media/3.%20Codex/Codex%20Icons/Codex%20Icon%20-%20Riddles.png", "petto": "Codex%20Media/3.%20Codex/Codex%20Icons/Codex%20Icon%20-%20Petto.png", "log": "Codex%20Media/3.%20Codex/Codex%20Icons/Codex%20Icon%20-%20Session%20Log.png", "frame": "Codex%20Media/3.%20Codex/Codex%20Icons/Codex%20Icon%20-%20Frame.png", "cordonShield": "Codex%20Media/3.%20Codex/Codex%20Icons/Codex%20Icon%20-%20Cordon%20Shield.png", "cordonSword": "Codex%20Media/3.%20Codex/Codex%20Icons/Codex%20Icon%20-%20Cordon%20Sword.png", "cordonCrown": "Codex%20Media/3.%20Codex/Codex%20Icons/Codex%20Icon%20-%20Cordon%20Crown.png", "cordonKeep": "Codex%20Media/3.%20Codex/Codex%20Icons/Codex%20Icon%20-%20Cordon%20Keep.png", "cordonRoad": "Codex%20Media/3.%20Codex/Codex%20Icons/Codex%20Icon%20-%20Cordon%20Road.png"};
 if(EMBIMG.frame)document.documentElement.style.setProperty('--frame','url('+EMBIMG.frame+')');
+['Shield','Sword','Crown','Keep','Road'].forEach(function(n){if(EMBIMG['cordon'+n])document.documentElement.style.setProperty('--cd-'+n.toLowerCase(),'url('+EMBIMG['cordon'+n]+')');});
 function ornament(){
   return '<span class="orn-bird" aria-hidden="true"></span>';
 }
