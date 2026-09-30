@@ -471,14 +471,7 @@ body.single #phead::after{left:calc(var(--pw) * .07);right:calc(var(--pw) * .07)
 .scroller p.ans .ans-text{font-family:var(--fellsc);letter-spacing:.06em;color:var(--ink)}
 
 /* ink */
-.wipe{clip-path:inset(0 101% 0 -2%);transition:clip-path .85s cubic-bezier(.32,.72,.3,1)}
-.wipe.on{clip-path:inset(0 -2% 0 -2%)}
-/* text settles from a soft blur to ink. Only colour and text-shadow animate: they are painted, never composited.
-   (Animating filter or opacity here made the compositor build layers thousands of px tall, and crashed iPhones.) */
-.settle,.settle *{transition:color 1.05s ease, text-shadow 1.35s ease}
-.settle:not(.on),.settle:not(.on) *{color:transparent!important;text-shadow:0 0 5px rgba(43,29,18,.55)}
-.settle img{clip-path:inset(0 101% 0 -2%);transition:clip-path 1.2s cubic-bezier(.32,.72,.3,1)}
-.settle.on img{clip-path:inset(0 -2% 0 -2%)}
+/* no text or picture reveal effects: text and pictures simply appear (Patrick's call). The ink hooks below stay inert. */
 
 /* page turn affordances */
 .turn{position:absolute;bottom:0;width:calc(var(--pw)*.14);height:calc(var(--pw)*.14);border:0;background:none;cursor:pointer;z-index:6}
@@ -891,6 +884,7 @@ function wrapWords(root){
   });
 }
 var WIPE='h1,h2,h3,h4,h5,.rh,.num,.subt,figcaption,.cap';
+var INKTEXT=false;   /* text and headings no longer ink in; they simply appear */
 function prepInk(root){
   if(!root)return [];
   var blocks=[];
@@ -923,7 +917,7 @@ function fill(el,i,live){
   if(pc){
     var sc=pc.querySelector('.scroller');
     if(sc){
-      if(!reduce){
+      if(!reduce&&INKTEXT){
         var head=pc.querySelector('.mhead');
         if(head&&!seen[i+'-head'])prepInk(head);
         [].slice.call(sc.children).forEach(function(a,k){
@@ -931,7 +925,7 @@ function fill(el,i,live){
           if(a.matches(WIPE))a.classList.add('wipe');else a.classList.add('settle');
         });
       }
-    }else if(!seen[i]&&!reduce){prepInk(pc);}
+    }else if(!seen[i]&&!reduce&&INKTEXT){prepInk(pc);}
   }
   if(live){bindPage(el);fitHero(el);var im=el.querySelector('.fig.hero img');if(im&&!im.complete)im.addEventListener('load',function(){fitHero(el);},{once:true});}
 }
