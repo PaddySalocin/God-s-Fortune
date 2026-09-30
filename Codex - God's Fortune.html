@@ -732,7 +732,9 @@ function buildPagesSingle(){
     if(ch.sections.length>1){opener={kind:'openlist',ch:ch.id,name:ch.name,items:[]};PAGES.push(opener);}
     ch.sections.forEach(function(sec){
       var at=PAGES.length;
-      PAGES.push({kind:sec.kind==='plate'?'plateFull':'merged',ch:ch.id,chname:ch.name,sec:sec,right:at});
+      /* a title page (title, picture, entry list), then the text on its own page */
+      if(sec.kind==='plate')PAGES.push({kind:'plateFull',ch:ch.id,chname:ch.name,sec:sec,right:at});
+      else{PAGES.push({kind:'title',ch:ch.id,chname:ch.name,sec:sec,right:at+1});PAGES.push({kind:'scroll',ch:ch.id,sec:sec});}
       if(opener)opener.items.push({title:sec.title,page:at,numeral:sec.numeral,sub:!!sec.group});
       SECS[ch.id].push({title:sec.title,page:at,sec:sec});
     });
@@ -1045,7 +1047,12 @@ function fitHero(el){
   var extra=(cap?cap.offsetHeight+parseFloat(getComputedStyle(cap).marginTop):0)+parseFloat(getComputedStyle(mat).paddingTop)*2+parseFloat(fs.marginTop)+parseFloat(fs.marginBottom)+4;
   var free=inner-other-extra;
   var minIdx=idx?Math.min(nat,line*2.2+14):0;
-  var idxH=idx?Math.min(nat,Math.max(minIdx,free-ph*.6)):0;
+  /* the picture wants only the height its shape needs at full width (at most 60% of the page); the list gets the rest */
+  var ar=parseFloat(img.getAttribute('data-var'))||(img.naturalWidth&&img.naturalHeight?img.naturalWidth/img.naturalHeight:1.4);
+  if(f.classList.contains('pair'))ar=parseFloat(f.style.getPropertyValue('--sum'))||ar;
+  var cw=pc.clientWidth-parseFloat(cs.paddingLeft)-parseFloat(cs.paddingRight)-parseFloat(getComputedStyle(mat).paddingLeft)*2;
+  var want=Math.min(ph*.6,cw/ar);
+  var idxH=idx?Math.min(nat,Math.max(minIdx,free-want)):0;
   var mh=Math.max(ph*.2,Math.min(ph*.68,free-idxH));
   if(idx)idx.style.maxHeight=idxH+'px';
   var pair=f.classList.contains('pair'),sum=parseFloat(f.style.getPropertyValue('--sum'))||1;
