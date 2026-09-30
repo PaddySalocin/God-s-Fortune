@@ -437,7 +437,7 @@ svg.orn circle{fill:var(--rubric);stroke:none}
 /* the book's own header, printed on the page */
 #phead{position:absolute;left:0;right:0;top:calc(var(--ph) * .028);z-index:14;display:none;align-items:baseline;gap:10px;
   padding:0 calc(var(--pw) * .09);pointer-events:none}
-#book.open #phead{display:flex}
+#book.open #phead{display:none}   /* no running head: every page names itself */
 #phead button,#phead .h-loc{pointer-events:auto;font-family:var(--fellsc);letter-spacing:.06em;font-size:.86em;line-height:1}
 #phead button{all:unset;cursor:pointer;color:#6b5236;padding:3px 2px;border-bottom:1px dotted rgba(110,84,57,.45)}
 #phead button:hover,#phead button:focus-visible{color:var(--rubric);border-bottom-color:var(--rubric)}
@@ -1582,6 +1582,7 @@ requestAnimationFrame(drawFlame);
 /* ---------- where you are ---------- */
 function head(){
   var el=document.getElementById('phead'); if(!el)return;
+  el.innerHTML='';return;   /* no running head (Patrick's call) */
   if(!isOpen){el.innerHTML='';return;}
   var fs=firstShown(),p=PAGES[fs];
   if(!p||p.kind==='board'||p.kind==='blank')p=PAGES[fs+1]||{};
