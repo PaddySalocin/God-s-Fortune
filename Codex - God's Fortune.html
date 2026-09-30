@@ -471,7 +471,15 @@ body.single #phead::after{left:calc(var(--pw) * .07);right:calc(var(--pw) * .07)
 .scroller p.ans .ans-text{font-family:var(--fellsc);letter-spacing:.06em;color:var(--ink)}
 
 /* ink */
-/* no text or picture reveal effects: text and pictures simply appear (Patrick's call). The ink hooks below stay inert. */
+/* writing: text waits blank until its block is reached, then titles write letter by letter (dark wet ink that dries)
+   and other text word by word (a faint mark darkening to ink). Only colour animates. Pictures simply appear. */
+.ink:not(.on),.ink:not(.on) *{color:transparent!important}
+.ink.wr.on .c{animation:pen .7s ease-out both;animation-delay:calc(var(--i) * 70ms)}
+.ink.wb.on .w{animation:wordink .5s ease-out both;animation-delay:calc(var(--i) * var(--step,45ms))}
+.ink.done .c,.ink.done .w,#flipper .ink .c,#flipper .ink .w{animation:none!important}
+.ink .wd{white-space:nowrap}
+@keyframes pen{0%{color:transparent}30%{color:#100804}}
+@keyframes wordink{0%{color:transparent}35%{color:rgba(60,42,26,.35)}}
 
 /* page turn affordances */
 .turn{position:absolute;bottom:0;width:calc(var(--pw)*.14);height:calc(var(--pw)*.14);border:0;background:none;cursor:pointer;z-index:6}
@@ -513,7 +521,7 @@ body.single #phead::after{left:calc(var(--pw) * .07);right:calc(var(--pw) * .07)
 @media (prefers-reduced-motion: reduce){
   #glow{animation:none}
   #book,#cover{transition:none}
-  .wipe,.settle,.settle *{clip-path:none;opacity:1;filter:none;transition:none}
+  .ink .c,.ink .w{animation:none!important}
 }
 </style>
 </head>
@@ -870,30 +878,49 @@ function inkRoute(el,again){
     setTimeout(function(){m.classList.add('on');},260+frac*dur);
   });
 }
-function wrapWords(root){
-  var walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,null),nodes=[],n;
+/* ---------- writing: titles letter by letter, other text word by word ----------
+   Blocks are marked .ink (titles also .wr, other text .wb); .on starts the writing; .done shows it finished.
+   Only colour animates, which is painted and never composited (safe on phones). */
+var TITLE='h1,h2';
+var WIPE='h1,h2,h3,h4,h5,.rh,.num,.subt,figcaption,.cap';
+var LETTER_MS=70, WORD_MS=45, BLOCK_MS=1500;
+function wrapText(root,letters){
+  var walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,null),nodes=[],n,k=0;
   while(n=walker.nextNode()){var pn=n.parentNode;if(n.nodeValue.trim()&&pn.closest&&!(pn.ownerSVGElement||pn.namespaceURI==='http://www.w3.org/2000/svg'))nodes.push(n);}
   nodes.forEach(function(t){
     var frag=document.createDocumentFragment();
     t.nodeValue.split(/(\s+)/).forEach(function(part){
       if(!part)return;
-      if(/^\s+$/.test(part)){frag.appendChild(document.createTextNode(part));}
-      else{var s=document.createElement('span');s.className='w';s.textContent=part;frag.appendChild(s);}
+      if(/^\s+$/.test(part)){frag.appendChild(document.createTextNode(part));return;}
+      if(letters){
+        var word=document.createElement('span');word.className='wd';
+        Array.from(part).forEach(function(ch){var s=document.createElement('span');s.className='c';s.style.setProperty('--i',k++);s.textContent=ch;word.appendChild(s);});
+        frag.appendChild(word);
+      }else{var s=document.createElement('span');s.className='w';s.style.setProperty('--i',k++);s.textContent=part;frag.appendChild(s);}
     });
     t.parentNode.replaceChild(frag,t);
   });
+  return k;
 }
-var WIPE='h1,h2,h3,h4,h5,.rh,.num,.subt,figcaption,.cap';
-var INKTEXT=false;   /* text and headings no longer ink in; they simply appear */
-function prepInk(root){
+function markInk(c){
+  var title=c.matches(TITLE),n=wrapText(c,title);
+  c.classList.add('ink',title?'wr':'wb');
+  var step=title?LETTER_MS:Math.max(8,Math.min(WORD_MS,BLOCK_MS/Math.max(1,n)));
+  if(!title)c.style.setProperty('--step',step.toFixed(1)+'ms');
+  c._write=n*step;
+}
+function prepInk(root,cheap){
+  /* cheap: only mark blocks blank (used for the page seen mid-turn, which is thrown away) */
   if(!root)return [];
   var blocks=[];
   function walk(n,depth){
     [].forEach.call(n.children,function(c){
       if(c.classList.contains('folio'))return;
-      if(c.matches(WIPE)){c.classList.add('wipe');blocks.push(c);return;}
-      if(c.matches('header,nav,.mhead,.contents,.idx,.olist,article,.rulebody,ol,ul')&&depth<4){walk(c,depth+1);return;}
-      c.classList.add('settle');blocks.push(c);
+      if(c.matches(WIPE)||!c.matches('header,nav,.mhead,.contents,.idx,.olist,article,.rulebody,ol,ul')||depth>=4){
+        if(cheap)c.classList.add('ink');else markInk(c);
+        blocks.push(c);return;
+      }
+      walk(c,depth+1);
     });
   }
   walk(root,0);
@@ -902,11 +929,11 @@ function prepInk(root){
 function runInk(blocks,base){
   var t=base||0;
   blocks.forEach(function(b){
-    var wipe=b.classList.contains('wipe');
     setTimeout(function(){b.classList.add('on');},t);
-    t+=wipe?275:(b.tagName==='LI'?100:175);
+    t+=Math.max(120,(b._write||300)*0.8);
   });
 }
+function finishInk(root){root.querySelectorAll('.ink').forEach(function(b){b.classList.add('on','done');});}
 
 /* fill a page element; live=true for the real on-screen pages */
 function fill(el,i,live){
@@ -917,15 +944,15 @@ function fill(el,i,live){
   if(pc){
     var sc=pc.querySelector('.scroller');
     if(sc){
-      if(!reduce&&INKTEXT){
+      if(!reduce){
         var head=pc.querySelector('.mhead');
-        if(head&&!seen[i+'-head'])prepInk(head);
+        if(head&&!seen[i+'-head'])prepInk(head,!live);
         [].slice.call(sc.children).forEach(function(a,k){
           if(seen[i+'-'+k]||a.hidden)return;
-          if(a.matches(WIPE))a.classList.add('wipe');else a.classList.add('settle');
+          if(live)markInk(a);else a.classList.add('ink');
         });
       }
-    }else if(!seen[i]&&!reduce&&INKTEXT){prepInk(pc);}
+    }else if(!seen[i]&&!reduce){prepInk(pc,!live);}
   }
   if(live){bindPage(el);fitHero(el);var im=el.querySelector('.fig.hero img');if(im&&!im.complete)im.addEventListener('load',function(){fitHero(el);},{once:true});}
 }
@@ -956,7 +983,7 @@ function ink(el){
     var head=pc.querySelector('.mhead');
     if(head&&!seen[i+'-head']&&!reduce){
       seen[i+'-head']=1;
-      var hb=[].slice.call(head.querySelectorAll('.wipe,.settle'));
+      var hb=[].slice.call(head.querySelectorAll('.ink'));
       requestAnimationFrame(function(){runInk(hb,40);});
     }
     if(el._io)return;
@@ -971,7 +998,7 @@ function ink(el){
         var k=[].indexOf.call(sc.children,a);
         if(!seen[i+'-'+k]){
           seen[i+'-'+k]=1;
-          var bits=a.matches('.wipe,.settle')?[a]:[].slice.call(a.querySelectorAll('.wipe,.settle'));
+          var bits=a.matches('.ink')?[a]:[].slice.call(a.querySelectorAll('.ink'));
           requestAnimationFrame(function(){runInk(bits,0);});
         }
         return false;
@@ -984,22 +1011,28 @@ function ink(el){
     requestAnimationFrame(check);
     return;
   }
-  if(seen[i]||reduce){pc.querySelectorAll('.wipe,.settle').forEach(function(b){b.classList.add('on');});seen[i]=1;return;}
+  if(seen[i]||reduce){finishInk(pc);seen[i]=1;return;}
   seen[i]=1;
-  var blocks=[].slice.call(pc.querySelectorAll('.wipe,.settle'));
+  var blocks=[].slice.call(pc.querySelectorAll('.ink'));
   requestAnimationFrame(function(){runInk(blocks,60);});
 }
 function copyFace(face,src){
   flipper.style.display='block'; /* a hidden sheet can't take a scroll position; show it (same task, no paint yet) first */
   face.innerHTML=src.innerHTML;
-  face.querySelectorAll('.wipe,.settle').forEach(function(b){b.classList.add('on');});
+  face.querySelectorAll('.ink.on').forEach(function(b){b.classList.add('done');});
   var a=src.querySelector('.scroller'),b=face.querySelector('.scroller'); if(a&&b)b.scrollTop=a.scrollTop;
   var c=src.querySelector('.idx'),d=face.querySelector('.idx'); if(c&&d)d.scrollTop=c.scrollTop;
 }
 function faceFor(face,i){
   var tmp=document.createElement('div');tmp.innerHTML=pageHtml(i);
   var pc=tmp.querySelector('.pc');
-  if(pc&&(seen[i]||reduce))pc.querySelectorAll('.wipe,.settle').forEach(function(b){b.classList.add('on');});
+  /* the page arriving under the turn: blank where it will be written, so it doesn't flash in then vanish */
+  if(pc&&!reduce){
+    var sc=pc.querySelector('.scroller');
+    if(sc){var hd=pc.querySelector('.mhead');if(hd&&!seen[i+'-head'])prepInk(hd,true);
+      [].slice.call(sc.children).forEach(function(a,k){if(!seen[i+'-'+k]&&!a.hidden)a.classList.add('ink');});}
+    else if(!seen[i])prepInk(pc,true);
+  }
   face.innerHTML=tmp.innerHTML;}
 
 /* ---------- image warm-up ----------
