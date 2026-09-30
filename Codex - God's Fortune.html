@@ -878,17 +878,18 @@ function routeSvg(){
       '<text class="num" x="0" y="-9.5">'+(i+1)+'</text></g>';
   }).join('');
   return '<svg class="route" viewBox="0 0 '+MAPW+' '+MAPH+'" preserveAspectRatio="none" aria-hidden="true">'+
-    '<defs><mask id="'+mid+'"><path class="rev" d="'+d+'" stroke="#fff" fill="none" stroke-width="14" stroke-linecap="round" stroke-linejoin="round"/></mask></defs>'+
+    '<defs><mask id="'+mid+'"><path class="rev"'+(seen.map||reduce?'':' style="visibility:hidden"')+' d="'+d+'" stroke="#fff" fill="none" stroke-width="14" stroke-linecap="round" stroke-linejoin="round"/></mask></defs>'+
     '<g mask="url(#'+mid+')"><path class="roadhalo" d="'+d+'"/><path class="road" d="'+d+'"/></g>'+marks+'</svg>';
 }
 function inkRoute(el,again){
   var svg=el.querySelector('svg.route'); if(!svg)return;
   var rev=svg.querySelector('.rev'),len=rev.getTotalLength(),marks=svg.querySelectorAll('.mk');
-  if((seen.map||reduce)&&!again){rev.style.strokeDasharray='none';rev.style.strokeDashoffset='0';
+  if((seen.map||reduce)&&!again){rev.style.visibility='visible';rev.style.strokeDasharray='none';rev.style.strokeDashoffset='0';
     marks.forEach(function(m){m.classList.add('on');});return;}
   if(again){rev.style.transition='none';marks.forEach(function(m){m.classList.remove('on');});void svg.getBoundingClientRect();}
-  seen.map=1;
-  rev.style.strokeDasharray=len;rev.style.strokeDashoffset=len;
+  /* marked seen only after this turn's calls, so both halves of a desktop spread draw together */
+  setTimeout(function(){seen.map=1;},0);
+  rev.style.strokeDasharray=len;rev.style.strokeDashoffset=len;rev.style.visibility='visible';
   var dur=5000;
   requestAnimationFrame(function(){
     rev.style.transition='stroke-dashoffset '+dur+'ms cubic-bezier(.45,.05,.35,1)';
