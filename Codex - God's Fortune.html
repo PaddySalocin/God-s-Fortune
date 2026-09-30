@@ -66,7 +66,7 @@ body{font-family:var(--fell);color:var(--ink);-webkit-tap-highlight-color:transp
 /* The turning sheet is a still picture of the page: nothing inside it scrolls or animates. A scrolling area here
    carries its whole content (11,000+ px on long pages) into the 3D turn, which exhausted memory on iPhones. */
 #flipper .scroller,#flipper .idx,#flipper .olist{overflow:hidden}
-#flipper .wipe,#flipper .settle,#flipper .embimg{transition:none}
+#flipper .wipe,#flipper .settle,#flipper .settle *,#flipper .embimg{transition:none}
 #flipper .face::after{content:'';position:absolute;inset:0;pointer-events:none;opacity:var(--shade,0);
   background:linear-gradient(90deg, rgba(20,10,3,.55), rgba(20,10,3,.15))}
 
@@ -343,6 +343,8 @@ body.single .ribbon{position:relative;top:auto !important;height:auto;min-height
 body.single .ribbon .rb{padding:0 12px 0 18px}
 body.single .ribbon .rb span{font-size:15px}
 body.single #candle{display:none !important}
+/* on a phone the book covers the table: drop the candle-light layers (full-screen, blended, animating forever) */
+body.single #glow,body.single #pool{display:none}
 body.single #cover{--cw2:min(var(--pw),calc(var(--ph) * .75));width:var(--cw2);height:calc(var(--cw2) / .75);
   left:calc(50% - var(--cw2) / 2);right:auto;top:50%;margin:0;transform-origin:left center;transform:translateY(-50%)}
 body.single #book.closed #cover{box-shadow:none}
@@ -443,7 +445,7 @@ svg.orn circle{fill:var(--rubric);stroke:none}
 #phead .h-loc{flex:1 1 auto;text-align:center;color:#7d6242}
 #phead::after{content:'';position:absolute;left:calc(var(--pw) * .09);right:calc(var(--pw) * .09);top:calc(100% + 6px);
   height:1px;background:linear-gradient(90deg,transparent,rgba(110,84,57,.45) 12%,rgba(110,84,57,.45) 88%,transparent)}
-body.single #phead{top:calc(var(--ph) * .022);padding:0 calc(var(--pw) * .07);font-size:.9em}
+body.single #phead{top:calc(var(--ph) * .022);padding:0 max(calc(var(--pw) * .07), calc(66px - (100vw - var(--pw)) / 2));font-size:.9em}
 body.single #phead::after{left:calc(var(--pw) * .07);right:calc(var(--pw) * .07)}
 
 .emb.embimg{display:block;width:calc(var(--ph) * .3);height:calc(var(--ph) * .26);margin-top:.7em;
@@ -471,8 +473,12 @@ body.single #phead::after{left:calc(var(--pw) * .07);right:calc(var(--pw) * .07)
 /* ink */
 .wipe{clip-path:inset(0 101% 0 -2%);transition:clip-path .85s cubic-bezier(.32,.72,.3,1)}
 .wipe.on{clip-path:inset(0 -2% 0 -2%)}
-.settle{opacity:.16;filter:blur(1.8px);transition:opacity 1.05s ease, filter 1.35s ease}
-.settle.on{opacity:1;filter:none}
+/* text settles from a soft blur to ink. Only colour and text-shadow animate: they are painted, never composited.
+   (Animating filter or opacity here made the compositor build layers thousands of px tall, and crashed iPhones.) */
+.settle,.settle *{transition:color 1.05s ease, text-shadow 1.35s ease}
+.settle:not(.on),.settle:not(.on) *{color:transparent!important;text-shadow:0 0 5px rgba(43,29,18,.55)}
+.settle img{clip-path:inset(0 101% 0 -2%);transition:clip-path 1.2s cubic-bezier(.32,.72,.3,1)}
+.settle.on img{clip-path:inset(0 -2% 0 -2%)}
 
 /* page turn affordances */
 .turn{position:absolute;bottom:0;width:calc(var(--pw)*.14);height:calc(var(--pw)*.14);border:0;background:none;cursor:pointer;z-index:6}
@@ -514,7 +520,7 @@ body.single #phead::after{left:calc(var(--pw) * .07);right:calc(var(--pw) * .07)
 @media (prefers-reduced-motion: reduce){
   #glow{animation:none}
   #book,#cover{transition:none}
-  .wipe,.settle{clip-path:none;opacity:1;filter:none;transition:none}
+  .wipe,.settle,.settle *{clip-path:none;opacity:1;filter:none;transition:none}
 }
 </style>
 </head>
@@ -612,7 +618,7 @@ function hideAnswers(h){
   });
 }
 function illuminate(h){return h.replace(/<p class="drop">([A-Z])/g,'<p class="drop dc"><span class="ini"><b>$1</b></span>');}
-function resolveImgs(h){h=illuminate(plateify(hideAnswers(h)));return h.replace(/data-src="(__CODEX_[A-Z_0-9]+__)"/g,function(m,k){return IMGS[k]&&m.indexOf('galp')<0?'src="'+IMGS[k]+'" data-k="'+k+'"':m;});}
+function resolveImgs(h){h=illuminate(plateify(hideAnswers(h)));return h.replace(/data-src="(__CODEX_[A-Z_0-9]+__)"/g,function(m,k){return IMGS[k]&&m.indexOf('galp')<0?'loading="lazy" decoding="async" src="'+IMGS[k]+'" data-k="'+k+'"':m;});}
 function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
 
 /* ---------- page model ----------
@@ -690,7 +696,7 @@ function titleHtml(p,i){
   var tp=s.title.split(' — ');
   var solo=(SECS[p.ch]||[]).length<=1&&EMBLEM[p.ch];
   h+='<header class="ch"><h2>'+esc(tp[0])+'</h2>'+(tp[1]?'<div class="subt">'+esc(tp.slice(1).join(' — '))+'</div>':'')+
-     (solo?emblemSvg(p.ch).replace(/class="emb( embimg)?"/,'class="emb$1 solo" data-ch="'+p.ch+'"'):''+ornament()+'')+'</header>';
+     (solo?emblemSvg(p.ch).replace(/class="emb( embimg)?/,'class="emb$1 solo'):''+ornament()+'')+'</header>';
   if(s.note)h+='<p class="lead">'+s.note+'</p>';
   if(s.hero)h+=resolveImgs(s.hero.replace(/class="fig (\w+)"/,'class="fig $1 hero"'));
   if(s.groupHead){
@@ -715,7 +721,7 @@ function pageHtml(i){
       '<img class="pl" src="'+IMGS[k]+'" data-k="'+k+'" data-zoom="1" alt="'+esc(p.sec.title)+'">'+routeSvg()+'</div>'+
       (p.kind==='plateL'?rhHtml(p)+'<div class="cap">'+esc(p.sec.title)+'<button class="redraw">trace the road again</button></div>':'')+'</div>';
   }
-  if(p.kind==='openlist')return '<div class="pc tp">'+rhHtml(p)+(p.name?'<header class="ch"><h2>'+esc(p.name)+'</h2>'+(EMBLEM[p.ch]?emblemSvg(p.ch).replace(/class="emb( embimg)?"/,'class="emb$1 solo" data-ch="'+p.ch+'"'):''+ornament()+'')+'</header>':'')+'<div class="olist contents sub"><ol>'+p.items.map(function(it){
+  if(p.kind==='openlist')return '<div class="pc tp">'+rhHtml(p)+(p.name?'<header class="ch"><h2>'+esc(p.name)+'</h2>'+(EMBLEM[p.ch]?emblemSvg(p.ch).replace(/class="emb( embimg)?/,'class="emb$1 solo'):''+ornament()+'')+'</header>':'')+'<div class="olist contents sub"><ol>'+p.items.map(function(it){
       return '<li class="'+(it.sub?'sub':'')+'"><button data-page="'+it.page+'"><span class="n">'+(it.numeral?'<span class="nm">'+it.numeral+'.</span> ':'')+esc(it.title)+'</span><span class="dots"></span><span class="pg">'+it.page+'</span></button></li>';}).join('')+'</ol></div>'+folio+'</div>';
   if(p.kind==='gameL')return (folio='')||'<div class="pc tp rules">'+rhHtml(p)+
     '<header class="ch"><h2>Cordon</h2>'+ornament()+'</header>'+
@@ -788,7 +794,7 @@ function emblemSvg(id){
       return '<path d="'+q[0]+'" style="stroke-dasharray:'+q[1]+','+(q[1]+10)+';stroke-dashoffset:'+(q[1]+3)+'"/>';}).join('')+'</svg></span>';
   if(EMBIMG[id])return '<span class="emb embimg" data-ch="'+id+'" style="--src:url('+EMBIMG[id]+')"></span>';
   var paths=EMBLEM[id]; if(!paths)return '';
-  return '<svg class="emb" viewBox="0 0 100 100" aria-hidden="true">'+paths.map(function(d){
+  return '<svg class="emb" data-ch="'+id+'" viewBox="0 0 100 100" aria-hidden="true">'+paths.map(function(d){
     return '<path d="'+d+'"/>';}).join('')+'</svg>';
 }
 function inkSwash(el){
@@ -1587,7 +1593,7 @@ function head(){
   else if(p.kind==='contents')loc='Contents';
   el.innerHTML='<button class="h-up"'+(p.kind==='contents'?' hidden':'')+'>‹ '+esc(u.label)+'</button>'+
     '<span class="h-loc">'+esc(loc)+'</span>'+
-    '<button class="h-toc"'+(p.kind==='contents'?' hidden':'')+'>Contents ›</button>';
+    '<button class="h-toc"'+(p.kind==='contents'||u.label==='Contents'?' hidden':'')+'>Contents ›</button>';
   var up=el.querySelector('.h-up'),tc=el.querySelector('.h-toc');
   if(up)up.onclick=function(e){e.stopPropagation();u.go();};
   if(tc)tc.onclick=function(e){e.stopPropagation();turnTo(mode==='spread'?0:1);};
