@@ -272,7 +272,13 @@ svg.route .mk.on .num{opacity:.95}
 #dv .dvtext{flex:1 1 auto;overflow-y:auto;-webkit-overflow-scrolling:touch;line-height:1.55;text-align:justify;hyphens:manual;padding-right:.3em}
 #dv .dvtext p{margin:0 0 .7em}
 /* the frontispiece: the teaser painting, facing Contents */
-.pc.frontis{display:flex;align-items:center;justify-content:center;padding:calc(var(--ph) * .08) calc(var(--pw) * .09)}
+.pc.frontis{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:calc(var(--ph) * .03);
+  padding:calc(var(--ph) * .08) calc(var(--pw) * .09)}
+.pc.frontis .ch{margin:0}
+.pc.frontis .ch h2{font-size:1.9em;margin:0}
+.pc.frontis .tagline{font-style:italic;color:var(--ink-faded);margin:0 calc(var(--pw) * .02);line-height:1.45;text-align:center}
+.pc.frontis .nextpg{display:none}
+body.single .pc.frontis .nextpg{all:unset;display:block;cursor:pointer;margin-top:calc(var(--ph) * .02);font-style:italic;color:var(--rubric);font-size:.95em}
 .fig.frontis{margin:0;width:100%}
 .fig.frontis .mat{display:block}
 .fig.frontis img{display:block;width:100%;height:auto;cursor:zoom-in}
@@ -777,8 +783,10 @@ function titleHtml(p,i){
 function pageHtml(i){
   var p=PAGES[i]; if(!p)return '<div class="endpaper"><span>❦</span></div>';
   var folio=(p.kind==='board'||p.kind==='contents')?'':'<div class="folio">'+i+'</div>';
-  if(p.kind==='board')return IMGS.__CODEX_TEASER__?'<div class="pc frontis"><figure class="fig frontis"><span class="mat vid" style="--var:1.7778;--tilt:0deg">'+
-    '<img src="'+IMGS.__CODEX_TEASER__+'" data-k="__CODEX_TEASER__" data-vid="'+IMGS.__CODEX_VID_TEASER__+'" data-var="1.7778" alt="God’s Fortune"></span></figure></div>':'';
+  if(p.kind==='board')return IMGS.__CODEX_TEASER__?'<div class="pc frontis"><header class="ch"><h2>God’s Fortune</h2><div class="subt">Campaign Codex</div></header><figure class="fig frontis"><span class="mat vid" style="--var:1.7778;--tilt:0deg">'+
+    '<img src="'+IMGS.__CODEX_TEASER__+'" data-k="__CODEX_TEASER__" data-vid="'+IMGS.__CODEX_VID_TEASER__+'" data-var="1.7778" alt="God’s Fortune"></span></figure>'+
+    '<p class="tagline">Peer-reviewed by a mechanical Dog that isn’t actually a dog and a wolf whose name is Moth, but who is now named Wulf</p>'+
+    '<button class="nextpg">turn the page ›</button></div>':'';
   if(p.kind==='contents')return '<div class="pc">'+contentsHtml()+'</div>';
   if(p.kind==='opener')return '<div class="pc op">'+rhHtml(p)+'<h1>'+esc(p.name)+'</h1>'+emblemSvg(p.ch).replace('class="emb"','class="emb" data-ch="'+p.ch+'"')+'</div>';
   if(p.kind==='plateL'||p.kind==='plateR'){
@@ -1774,6 +1782,7 @@ function bindPage(el){
     if(b.dataset.go)goEntry(+b.dataset.page,b.dataset.go);else goPage(+b.dataset.page);};});
   el.querySelectorAll('.scroller figure img, img.pl, .fig.hero img, .fig.frontis img').forEach(function(im){im.onclick=function(e){e.stopPropagation();openLB(im);};});
   el.querySelectorAll('button.dream').forEach(function(b){b.onclick=function(e){e.stopPropagation();openDream(b);};});
+  el.querySelectorAll('button.nextpg').forEach(function(b){b.onclick=function(e){e.stopPropagation();next();};});
   el.querySelectorAll('.rh.up').forEach(function(b){
     var idx=+el.dataset.idx,p=PAGES[idx]||PAGES[idx+1];
     b.onclick=function(e){e.stopPropagation();upFrom(p).go();};});
