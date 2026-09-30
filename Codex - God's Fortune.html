@@ -445,7 +445,7 @@ svg.orn circle{fill:var(--rubric);stroke:none}
 #phead .h-loc{flex:1 1 auto;text-align:center;color:#7d6242}
 #phead::after{content:'';position:absolute;left:calc(var(--pw) * .09);right:calc(var(--pw) * .09);top:calc(100% + 6px);
   height:1px;background:linear-gradient(90deg,transparent,rgba(110,84,57,.45) 12%,rgba(110,84,57,.45) 88%,transparent)}
-body.single #phead{top:calc(var(--ph) * .022);padding:0 max(calc(var(--pw) * .07), calc(66px - (100vw - var(--pw)) / 2));font-size:.9em}
+body.single #phead{top:calc(var(--ph) * .022);padding:0 calc(var(--pw) * .07);font-size:.9em}
 body.single #phead::after{left:calc(var(--pw) * .07);right:calc(var(--pw) * .07)}
 
 .emb.embimg{display:block;width:calc(var(--ph) * .3);height:calc(var(--ph) * .26);margin-top:.7em;
@@ -1591,12 +1591,7 @@ function head(){
     loc=chn+(p.sec?'  ·  '+p.sec.title.split(' — ')[0]:'');
   }else if(p.kind==='gameL'||p.kind==='gameR')loc='Cordon';
   else if(p.kind==='contents')loc='Contents';
-  el.innerHTML='<button class="h-up"'+(p.kind==='contents'?' hidden':'')+'>‹ '+esc(u.label)+'</button>'+
-    '<span class="h-loc">'+esc(loc)+'</span>'+
-    '<button class="h-toc"'+(p.kind==='contents'||u.label==='Contents'?' hidden':'')+'>Contents ›</button>';
-  var up=el.querySelector('.h-up'),tc=el.querySelector('.h-toc');
-  if(up)up.onclick=function(e){e.stopPropagation();u.go();};
-  if(tc)tc.onclick=function(e){e.stopPropagation();turnTo(mode==='spread'?0:1);};
+  el.innerHTML='<span class="h-loc">'+esc(loc)+'</span>';
 }
 function crumbs(){ head(); return;
   var el=document.getElementById('crumbs'); if(!el)return;
