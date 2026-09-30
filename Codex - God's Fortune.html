@@ -148,7 +148,7 @@ body.single .drop.dc{--ini:6.3em}
 .contents ol{list-style:none}
 .contents li{margin:.15em 0}
 .contents button{all:unset;display:flex;align-items:baseline;width:100%;cursor:pointer;padding:.28em 0;font-size:1.12em}
-.contents button .n{flex:0 0 auto}
+.contents button .n{flex:0 1 auto;min-width:0;overflow-wrap:break-word}
 .contents button .dots{flex:1 1 auto;border-bottom:1px dotted rgba(80,55,30,.5);margin:0 .4em;transform:translateY(-.3em)}
 .contents button .pg{flex:0 0 auto;font-size:.9em;color:var(--ink-faded)}
 .contents button:hover .n,.contents button:focus-visible .n{color:var(--rubric)}
@@ -240,6 +240,7 @@ svg.route .mk.on .num{opacity:.95}
 .olist{flex:1 1 auto;min-height:0;overflow-y:auto;margin-top:.4em;scrollbar-width:thin;scrollbar-color:rgba(70,45,20,.4) transparent;
   -webkit-mask-image:linear-gradient(to bottom,transparent 0,#000 var(--ft,0px),#000 calc(100% - var(--fb,0px)),transparent 100%);
   mask-image:linear-gradient(to bottom,transparent 0,#000 var(--ft,0px),#000 calc(100% - var(--fb,0px)),transparent 100%)}
+.olist,.idx{overflow-x:hidden}
 .olist::-webkit-scrollbar{width:5px}.olist::-webkit-scrollbar-thumb{background:rgba(70,45,20,.4);border-radius:3px}
 
 
