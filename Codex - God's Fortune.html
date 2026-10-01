@@ -830,9 +830,10 @@ function pageHtml(i){
     '<p class="lead">A game older than the borders, scratched into tables from Vhorast to Fjornhalt.</p>'+
     '<div class="rulebody">'+
     '<p>Eight of the cordon, the crossed swords, stand at the edges. Four of the hold, the shields, stand with their lord, the crown, at the centre.</p>'+
-    '<p>Every piece moves like a cart on a rut: any distance along a rank or a file, never through another piece. Only the lord may stand upon the centre or in a corner.</p>'+
-    '<p>A piece is taken when the enemy closes on both sides of it along a rank or file. The corners and the empty centre count as an enemy for this. Move between two enemies freely; it is the closing that kills.</p>'+
-    '<p>The lord wins by reaching any corner. The cordon wins by closing on the lord from all four sides.</p>'+
+    '<p>Every piece moves like a cart on a rut: any distance along a rank or a file, never through another piece. Only the lord may stop upon the centre or in a corner, but any piece may cross the empty centre.</p>'+
+    '<p>A piece is taken when the enemy closes on both sides of it along a rank or file. The corners count as an enemy to all, and the centre to the cordon always and to the hold when it stands empty; the board’s edge does not. Move between two enemies freely; it is the closing that kills. The lord fights like any other piece.</p>'+
+    '<p>The lord is taken by two like any piece, save on the centre, where the cordon must close all four sides, or beside it, where they must close the other three.</p>'+
+    '<p>The lord wins by reaching any corner. The cordon wins by taking the lord, or by closing in the whole hold so that none can reach the edge. A side that cannot move loses.</p>'+
     '<p class="q">The cordon moves first. Choose your side on the board.</p></div>'+
     '<div class="levels"><span>The other side keeps a</span>'+
     ['slack','fair','tight'].map(function(k){return '<button class="lvl" data-lvl="'+k+'">'+k+'</button>';}).join('')+
@@ -1238,8 +1239,7 @@ function legalFrom(st,i){
     while(rr>=0&&rr<N&&cc>=0&&cc<N){
       var j=idx(rr,cc);
       if(st.b[j])break;
-      if(special(j)&&p!==3){ if(j===THRONE){break;} }
-      else out.push(j);
+      if(!(special(j)&&p!==3))out.push(j);   /* only the lord stops on the centre or a corner; anyone passes the empty centre */
       rr+=d[0];cc+=d[1];
     }
   });
@@ -1270,24 +1270,36 @@ function apply(st,mv){
   [[1,0],[-1,0],[0,1],[0,-1]].forEach(function(d){
     var a=neighbour(to,d); if(a<0)return;
     var q=s.b[a]; if(!q||sideOf(q)===side)return;
-    if(q===3){ /* the lord is taken only when closed on all four sides */
-      var all=true;
-      [[1,0],[-1,0],[0,1],[0,-1]].forEach(function(e){
-        var n=neighbour(a,e);
-        if(n<0)return; /* the board's edge pens him in too */
-        if(!(s.b[n]&&sideOf(s.b[n])===side)&&!(n===THRONE&&s.b[THRONE]!==3))all=false;
-      });
-      if(all){s.over='cordon';}
+    if(q===3){
+      /* the lord: on the centre he must be closed on all four sides, beside it on the other three;
+         anywhere else he is taken by two, like any piece (the board's edge never counts) */
+      var nb=[[1,0],[-1,0],[0,1],[0,-1]].map(function(e){return neighbour(a,e);});
+      if(a===THRONE||nb.indexOf(THRONE)>=0){
+        if(nb.every(function(n){return n===THRONE||(n>=0&&s.b[n]===1);}))s.over='cordon';
+      }else{
+        var far=neighbour(a,d);
+        if(far>=0&&(s.b[far]===1||CORNERS.indexOf(far)>=0||(far===THRONE&&!s.b[THRONE])))s.over='cordon';
+      }
       return;
     }
     var b2=neighbour(a,d); if(b2<0)return;
     if(hostile(s,b2,side)){s.b[a]=0;s.taken[side]++;}
   });
   if(p===3&&CORNERS.indexOf(to)>=0)s.over='hold';
+  if(!s.over&&side===1&&encircled(s))s.over='cordon';
   s.turn=side===1?2:1;
   if(!s.over&&!allMoves(s,s.turn).length)s.over=s.turn===1?'hold':'cordon';
   if(!s.over&&s.ply>120)s.over='draw';
   return s;
+}
+function encircled(st){
+  /* the cordon has closed in the whole hold: no defender can reach the board's edge */
+  var seen={},q=[];
+  for(var i=0;i<49;i++)if(st.b[i]===2||st.b[i]===3){seen[i]=1;q.push(i);}
+  while(q.length){var i=q.pop(),r=(i/N)|0,c=i%N;
+    if(r===0||c===0||r===N-1||c===N-1)return false;
+    [[1,0],[-1,0],[0,1],[0,-1]].forEach(function(d){var j=neighbour(i,d);if(j>=0&&!seen[j]&&st.b[j]!==1){seen[j]=1;q.push(j);}});}
+  return true;
 }
 function lordAt(st){for(var i=0;i<49;i++)if(st.b[i]===3)return i;return -1;}
 function cornerDist(i){
