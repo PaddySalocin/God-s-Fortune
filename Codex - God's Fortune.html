@@ -1608,7 +1608,7 @@ function closeBook(){
     cover.setAttribute('aria-label','Open the book');
     setTimeout(function(){book.classList.add('shut');isOpen=false;busy=false;cover.focus({preventScroll:true});},reduce?0:820);
   };
-  var home=mode==='spread'?0:1;
+  var home=0;
   if(mode==='single'&&cur!==home){cur=home;render();}
   if(cur!==home){busy=false;turnTo(home);var wait=setInterval(function(){if(!busy){clearInterval(wait);busy=true;fin();}},60);}
   else fin();
@@ -1930,11 +1930,17 @@ document.addEventListener('keydown',function(e){
   if(e.key==='ArrowRight')next();else if(e.key==='ArrowLeft')prev();else if(e.key==='Escape')closeBook();
 });
 var sx=null,sy=null;
+/* a sideways swipe: left turns forward (and opens the closed book), right turns back (and closes it from the first page) */
+function swipe(dx){
+  if(busy)return;
+  if(!isOpen){if(dx<0)openBook();return;}
+  if(dx<0)next();else if(cur<=0)closeBook();else prev();
+}
 book.addEventListener('pointerdown',function(e){sx=e.clientX;sy=e.clientY;});
 book.addEventListener('pointerup',function(e){
   if(e.pointerType==='touch'){sx=null;return;}
-  if(sx===null||!isOpen)return;var dx=e.clientX-sx,dy=e.clientY-sy;sx=null;
-  if(Math.abs(dx)>40&&Math.abs(dx)>Math.abs(dy)*1.3){if(dx<0)next();else prev();}
+  if(sx===null)return;var dx=e.clientX-sx,dy=e.clientY-sy;sx=null;
+  if(Math.abs(dx)>40&&Math.abs(dx)>Math.abs(dy)*1.3)swipe(dx);
 });
 /* touch swipes: a quick, mostly sideways stroke of one finger turns the page */
 var tx=null,ty=null,tt=0;
@@ -1942,8 +1948,8 @@ book.addEventListener('touchstart',function(e){
   if(e.touches.length!==1){tx=null;return;}tx=e.touches[0].clientX;ty=e.touches[0].clientY;tt=Date.now();},{passive:true});
 book.addEventListener('touchmove',function(e){if(e.touches.length!==1)tx=null;},{passive:true});
 book.addEventListener('touchend',function(e){
-  if(tx===null||!isOpen||busy)return;var t=e.changedTouches[0],dx=t.clientX-tx,dy=t.clientY-ty;tx=null;
-  if(Date.now()-tt<900&&Math.abs(dx)>45&&Math.abs(dx)>Math.abs(dy)*1.5){if(dx<0)next();else prev();}},{passive:true});
+  if(tx===null)return;var t=e.changedTouches[0],dx=t.clientX-tx,dy=t.clientY-ty;tx=null;
+  if(Date.now()-tt<900&&Math.abs(dx)>45&&Math.abs(dx)>Math.abs(dy)*1.5)swipe(dx);},{passive:true});
 book.addEventListener('touchcancel',function(){tx=null;},{passive:true});
 window.addEventListener('scroll',function(){placeCandle();});
 var rt;function relayout(){clearTimeout(rt);rt=setTimeout(layout,150);}
