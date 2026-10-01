@@ -379,7 +379,7 @@ svg.emb.solo{width:calc(var(--ph) * .16);height:calc(var(--ph) * .16);margin:.35
 .levels button.lvl:hover{color:var(--rubric)}
 .levels button.lvl.on{color:var(--rubric);border-bottom-color:var(--rubric)}
 
-.pc.tp.rules{padding-bottom:calc(var(--ph) * .12)}
+.pc.tp.rules{padding-bottom:calc(var(--ph) * .12);overflow-y:auto;scrollbar-width:thin;scrollbar-color:rgba(70,45,20,.4) transparent}
 
 /* phone */
 #tab{display:none;position:fixed;top:calc(env(safe-area-inset-top,0px) + 10px);right:10px;z-index:40;
@@ -825,7 +825,7 @@ function pageHtml(i){
   }
   if(p.kind==='openlist')return '<div class="pc tp">'+rhHtml(p)+(p.name?'<header class="ch"><h2>'+esc(p.name)+'</h2>'+(EMBLEM[p.ch]?emblemSvg(p.ch).replace(/class="emb( embimg)?/,'class="emb$1 solo'):''+ornament()+'')+'</header>':'')+'<div class="olist contents sub"><ol>'+p.items.map(function(it){
       return '<li class="'+(it.sub?'sub':'')+'"><button data-page="'+it.page+'"><span class="n">'+(it.numeral?'<span class="nm">'+it.numeral+'.</span> ':'')+esc(it.title)+'</span><span class="dots"></span><span class="pg">'+it.page+'</span></button></li>';}).join('')+'</ol></div>'+folio+'</div>';
-  if(p.kind==='gameL')return (folio='')||'<div class="pc tp rules">'+rhHtml(p)+
+  if(p.kind==='gameL'){var rb=rhHtml(p)+
     '<header class="ch"><h2>Cordon</h2>'+ornament()+'</header>'+
     '<p class="lead">A game older than the borders, scratched into tables from Vhorast to Fjornhalt.</p>'+
     '<div class="rulebody">'+
@@ -838,7 +838,9 @@ function pageHtml(i){
     ['slack','fair','tight'].map(function(k){return '<button class="lvl" data-lvl="'+k+'">'+k+'</button>';}).join('')+
     '<span>watch</span></div>'+
     '<button class="newgame">New game</button>'+
-    '<button class="toboard">Turn the page to play ›</button>'+folio+'</div>';
+    '<button class="toboard">Turn the page to play ›</button>';
+    /* phones: the rules scroll as one page */
+    return mode==='single'?'<div class="pc sp leadpg rules"><div class="scroller" tabindex="0">'+rb+'</div></div>':'<div class="pc tp rules">'+rb+'</div>';}
   if(p.kind==='gameR')return (folio='')||'<div class="pc sp board-page"><div class="boardwrap"><div class="board"></div><div class="gstatus"></div><div class="begin"></div><div class="taken"></div></div>'+folio+'</div>';
   if(p.kind==='merged')return '<div class="pc sp merged"><div class="mhead">'+titleHtml(p,i)+'</div>'+
     '<div class="scroller" tabindex="0">'+(p._arr||(p._arr=arrange(resolveImgs(p.sec.html))))+'</div>'+folio+'</div>';
@@ -1062,7 +1064,9 @@ function fill(el,i,live){
   if(live){bindPage(el);fitHero(el);var im=el.querySelector('.fig.hero img');if(im&&!im.complete)im.addEventListener('load',function(){fitHero(el);},{once:true});}
 }
 function fitHero(el){
-  var f=el.querySelector('.fig.hero'); if(!f||f.closest('.scroller'))return;
+  var f=el.querySelector('.fig.hero');
+  if(!f){var ix=el.querySelector('.pc.tp > .idx');if(ix){ix.style.flex='1 1 auto';ix.style.minHeight='0';}return;}
+  if(f.closest('.scroller'))return;
   var pc=f.closest('.pc'),mat=f.querySelector('.mat'),img=f.querySelector('img'); if(!mat||!img||!pc)return;
   var ph=parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--ph'));
   var cs=getComputedStyle(pc),inner=pc.clientHeight-parseFloat(cs.paddingTop)-parseFloat(cs.paddingBottom);
@@ -1322,7 +1326,9 @@ function evaluate(st){
 var DEADLINE=0,THINK=1400;   /* the computer thinks at most THINK ms a move */
 function search(st,depth,alpha,beta){
   if(DEADLINE&&Date.now()>DEADLINE)throw 'time';
-  if(st.over||depth===0)return evaluate(st);
+  /* a win found sooner (more depth left) scores higher than the same win found later */
+  if(st.over)return evaluate(st)+(st.over==='cordon'?depth:st.over==='hold'?-depth:0);
+  if(depth===0)return evaluate(st);
   var side=st.turn,moves=allMoves(st,side);
   if(!moves.length)return evaluate(st);
   moves=moves.map(function(m){var s=apply(st,m);return [evaluate(s),m,s];})
@@ -1340,6 +1346,9 @@ function aiMove(st,side){
   /* the computer's move for either side; evaluate() favours the cordon, so the hold minimises it */
   var cfg=LEVELS[LEVEL]||LEVELS.fair,moves=allMoves(st,side),sg=side===1?1:-1;
   if(!moves.length)return null;
+  /* a win on the board is always taken */
+  var want=side===1?'cordon':'hold';
+  for(var w=0;w<moves.length;w++){if(apply(st,moves[w]).over===want)return moves[w];}
   if(Math.random()<cfg.slip)return moves[Math.floor(Math.random()*moves.length)];
   var ranked=moves.map(function(m){var s=apply(st,m);return [sg*evaluate(s),m,s];})
                   .sort(function(a,b){return b[0]-a[0];}).slice(0,cfg.w);
