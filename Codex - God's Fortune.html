@@ -363,6 +363,9 @@ svg.emb.solo{width:calc(var(--ph) * .16);height:calc(var(--ph) * .16);margin:.35
 .sq.corner::after{-webkit-mask-image:var(--cd-road);mask-image:var(--cd-road)}
 .sq.can::before{content:'';position:absolute;width:22%;height:22%;border-radius:50%;background:rgba(142,42,26,.3)}
 .sq.sel{box-shadow:inset 0 0 0 2px rgba(142,42,26,.8)}
+.sq .tk{position:absolute;width:54%;height:54%;pointer-events:none}
+.sq .tk::before,.sq .tk::after{content:'';position:absolute;left:50%;top:0;width:3px;height:100%;margin-left:-1.5px;border-radius:2px;background:#b3341f;transform:rotate(45deg)}
+.sq .tk::after{transform:rotate(-45deg)}
 .sq.last{background:rgba(190,150,80,.14)}
 /* ink-drawn pieces: crossed swords (cordon) closing on shields (hold) guarding the crown (lord) */
 .sq span{position:relative;z-index:1;display:block;-webkit-mask:center/contain no-repeat;mask:center/contain no-repeat}
@@ -1279,7 +1282,7 @@ function neighbour(i,d){
   return (rr<0||rr>=N||cc<0||cc>=N)?-1:idx(rr,cc);
 }
 function apply(st,mv){
-  var s={b:st.b.slice(),turn:st.turn,over:null,sel:-1,moves:[],last:mv,ply:(st.ply||0)+1,taken:{1:st.taken[1],2:st.taken[2]}};
+  var s={b:st.b.slice(),turn:st.turn,over:null,sel:-1,moves:[],last:mv,ply:(st.ply||0)+1,taken:{1:st.taken[1],2:st.taken[2]},cap:[]};
   var from=mv[0],to=mv[1],p=s.b[from];s.b[from]=0;s.b[to]=p;
   var side=sideOf(p);
   [[1,0],[-1,0],[0,1],[0,-1]].forEach(function(d){
@@ -1298,7 +1301,7 @@ function apply(st,mv){
       return;
     }
     var b2=neighbour(a,d); if(b2<0)return;
-    if(hostile(s,b2,side)){s.b[a]=0;s.taken[side]++;}
+    if(hostile(s,b2,side)){s.b[a]=0;s.taken[side]++;s.cap.push(a);}
   });
   if(p===3&&CORNERS.indexOf(to)>=0)s.over='hold';
   if(!s.over&&side===1&&encircled(s))s.over='cordon';
@@ -1409,6 +1412,7 @@ function drawBoard(el){
     if(G.last&&(i===G.last[0]||i===G.last[1]))sq.className+=' last';
     var p=G.b[i];
     if(p)sq.innerHTML='<span class="pc'+p+'"></span>';
+    else if(G.cap&&G.cap.indexOf(i)>=0)sq.innerHTML='<b class="tk" aria-label="taken"></b>';   /* a piece was just taken here */
     sq.dataset.i=i;
     host.appendChild(sq);
   }
